@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "lint-ignore": {
+      "paths": ["src"],
+      "ext": ["ts", "tsx", "js", "jsx", "py", "php", "go", "rs"],
+      "regex": "eslint-disable|@ts-(ignore|expect-error|nocheck)|\\bnoqa\\b|type:\\s*ignore|pyright:\\s*ignore|phpstan-ignore|phpcs:(ignore|disable)|//\\s*nolint|#\\[allow\\(",
+      "message": "Inline lint/type ignores are banned. Fix the code so the rule passes. If the rule is wrong, change the rule in its config and say so in the PR."
+    },
+    "timers": {
+      "paths": ["src"],
+      "ext": ["ts", "tsx", "js", "jsx"],
+      "exclude": ["src/**/*.test.*", "src/**/*.spec.*"],
+      "regex": "\\b(setTimeout|setInterval|requestAnimationFrame|requestIdleCallback)\\s*\\(",
+      "scope": "code",
+      "message": "Timers patch over ordering bugs. Derive state from the event that signals readiness, or await the promise that resolves when it is ready."
+    },
+    "console-log": {
+      "paths": ["src"],
+      "ext": ["ts", "tsx", "js", "jsx"],
+      "regex": "console\\.log\\(",
+      "scope": "code",
+      "message": "console.log must not ship. Remove it, or use the logger."
+    },
+    "inner-html": {
+      "paths": ["src"],
+      "ext": ["ts", "tsx", "js", "jsx", "html", "vue", "svelte"],
+      "regex": "\\.innerHTML\\s*\\+?=|dangerouslySetInnerHTML|v-html=|\\{@html",
+      "scope": "code",
+      "message": "Building DOM from strings is how stored XSS happens. Use textContent, framework text bindings, or a vetted sanitizer behind one helper."
+    },
+    "broad-except": {
+      "paths": ["src"],
+      "ext": ["py"],
+      "regex": "^\\s*except(\\s+(Exception|BaseException))?\\s*:",
+      "scope": "code",
+      "message": "Catch the specific exception you can handle. Let the rest propagate to the boundary that maps errors to responses."
+    },
+    "skip-without-issue": {
+      "paths": ["tests", "src"],
+      "ext": ["py", "ts", "tsx", "js", "jsx"],
+      "regex": "(\\b(it|test|describe)\\.skip\\(|\\bx(it|describe)\\(|@pytest\\.mark\\.skip(?!.*#\\d+))",
+      "scope": "code",
+      "message": "Skipped tests rot. Fix the test, delete it, or skip with a reason that links an issue (e.g. reason=\"#123\")."
+    },
+    "comments": {
+      "paths": ["src"],
+      "ext": ["py", "ts", "tsx", "js", "jsx", "php", "go", "rs"],
+      "regex": "\\S",
+      "scope": "comment",
+      "allow": "^(Critical:\\s*\\S|SPDX-License-Identifier:|go:(build|embed|generate)|/ <reference)",
+      "message": "Comments are banned. Make the code say it: rename, extract a well-named function, or add a type. Durable facts go in CLAUDE.md under 'Facts code can't show'. Only `Critical: <why>` is allowed, for an invariant the code cannot express whose violation causes a bug, security hole, or data loss."
+    }
+  }
+}
