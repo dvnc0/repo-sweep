@@ -7,7 +7,7 @@ description: Audits and cleans a repository so coding agents can trust it - find
 
 Make a repo a high-trust environment for agents. That means one truthful instructions file, rules enforced by tools instead of prose, and verification that leaves evidence. Agents copy whatever they find. Every stale doc, contradiction, workaround and escape hatch gets reproduced at agent speed, so remove them or fence them in with checks.
 
-Usage: `/repo-sweep [audit|docs|gate|comments|verify] [path]`. With no mode, run **audit**, then offer the other phases in order.
+Usage: `/repo-sweep [audit|docs|gate|comments|verify|deliver] [path]`. With no mode, run **audit**, then offer the other phases in order.
 
 Scripts sit in `scripts/` next to this file. They are stdlib Python 3.9+ and read-only unless noted:
 
@@ -63,11 +63,17 @@ Follow `references/comments.md`. The gate must exist first, because the comment 
 
 Follow `references/verification.md`. Pick the Layer 3 verification that fits the repo: tests in the gate, property tests for invariants, architecture tests, a runtime driver that produces artifacts, and formal methods only where state is distributed and expensive to get wrong.
 
+## Mode: deliver
+
+Follow `references/delivery.md`. Chain the gate into delivery: a pre-push hook that tests the exact pushed commit, CI running the same gate, a deploy script that refuses any SHA without a green CI run, and read-only smoke tests against production afterwards. Run it once the gate (and ideally verify) is trustworthy, and ask before touching CI or deploy scripts.
+
 ## Working rules
 
 - Work in small, separately reviewable steps, one concern per commit. The gate must pass after each step, and a step that improves a baseline commits the smaller baseline.
 - Commit only when the user agrees. Never push or open PRs unless asked.
 - For large mechanical work (stripping comments across hundreds of files, fixing a rule across the tree), split it into batches by directory. Give each batch a frozen contract: what may change, what must not, and the verification command. If parallel subagents or worktrees are available and the user wants speed, run batches in parallel and merge sequentially, re-running the gate after each merge.
+- In worktrees, copy or install dependency dirs (`vendor/`, `node_modules/`, `.venv/`); never symlink them. Autoloaders resolve through the symlink to the main checkout, so tests silently run the main tree's code. Prove it by printing a class's resolved file path from inside the worktree.
+- Every large batch run needs "baselines only shrink" in its definition of done. Regenerating a baseline after a batch can quietly absorb breakage the batch introduced, such as docblock parse errors.
 - When a check you add fails on a pattern that is actually fine, fix the rule (narrow the regex, add a config-level exclusion with a reason in the rule message). Don't add inline ignores.
 - Every new rule gets a fixture proving it fires: a quick throwaway file or a test case. Tools often don't enforce what their names suggest. For example, ESLint's `capitalized-comments` and `multiline-comment-style` format comments but don't ban them.
 
@@ -77,4 +83,5 @@ Follow `references/verification.md`. Pick the Layer 3 verification that fits the
 - There is one instructions file, and every claim in it about commands, paths and APIs has been checked against the repo.
 - `inventory.py` reports no unresolved references in instruction files.
 - One gate command exists and passes at HEAD. Its baselines can only shrink, and its rules have instructive messages.
+- If deliver ran: nothing reaches production without passing the gate locally and in CI, and smoke tests run after every deploy.
 - The final summary to the user lists what was removed, what became checks, what moved to issues, the before/after baseline counts, and the remaining recommended next steps.

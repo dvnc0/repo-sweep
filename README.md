@@ -8,7 +8,8 @@ Agents copy what they find. Every stale doc, contradictory instruction, workarou
 - **Docs**: consolidates everything into one true instructions file that describes the gate plus the facts the code can't show.
 - **Gate**: builds a single `check` command with instructive rule messages, architecture boundaries, banned escape hatches, and baselines that can only shrink.
 - **Comments**: bans comment slop with one narrow exception (`Critical: <why>`), harvests durable facts first, and proves each cleanup changed no code.
-- **Verify**: adds verification proportionate to the repo: tests in the gate, property-based tests, runtime drivers that produce reviewable artifacts, and formal methods only where they pay off.
+- **Verify**: adds verification proportionate to the repo: tests in the gate, property-based tests, runtime drivers that produce reviewable artifacts, and formal methods only where they pay off. It also closes silent gaps: missing extensions and resource limits that make tests skip.
+- **Deliver**: chains the gate into delivery: a pre-push hook that tests the exact pushed commit, CI running the same gate, deploys refused without green CI, and read-only production smoke tests.
 
 It builds on the "inverse pyramid of trust" idea. Constraints in the architecture and the compiler come first, static analysis next, verification infrastructure after that, and prose instructions last, only for what needs judgment.
 
@@ -25,7 +26,7 @@ Then, in Claude Code inside the repo you want to clean:
 
 ```
 /repo-sweep            # audit, then offer the other phases
-/repo-sweep gate       # or jump to a phase: docs | gate | comments | verify
+/repo-sweep gate       # or jump to a phase: docs | gate | comments | verify | deliver
 ```
 
 ## Layout
@@ -33,7 +34,7 @@ Then, in Claude Code inside the repo you want to clean:
 ```
 skills/repo-sweep/
   SKILL.md                     workflow and principles
-  references/                  loaded per phase: audit, instructions, gate, comments, verification
+  references/                  loaded per phase: audit, instructions, gate, comments, verification, delivery
   scripts/
     inventory.py               read-only survey: instruction files, docs, tooling, comments, escapes, dead refs
     comment_only_diff.py       proves a change touched only comments/docstrings/whitespace (Python, PHP, JS/TS)
